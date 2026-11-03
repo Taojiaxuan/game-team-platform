@@ -1,0 +1,15 @@
+# === Maven 构建产物 ===
+target/
+
+# === IntelliJ IDEA ===
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# === 操作系统 ===
+.DS_Store
+Thumbs.db
+
+# === 日志 ===
+*.log

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏战队与赛事报名平台</title>
+    <style>
+        :root {
+            --primary: #4f6ef7;
+            --primary-dark: #3d56d4;
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --border: #e5e8f0;
+            --text: #2b2f3a;
+            --muted: #8a91a3;
+            --danger: #e5484d;
+            --success: #18a058;
+            --warning: #f0a020;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+            background: var(--bg); color: var(--text); font-size: 14px;
+        }
+        header {
+            background: linear-gradient(135deg, #4f6ef7, #7a5cf0);
+            color: #fff; padding: 20px 32px; display: flex; align-items: center;
+            justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,.08);
+        }
+        header h1 { font-size: 20px; font-weight: 600; }
+        header .sub { font-size: 12px; opacity: .85; margin-top: 4px; }
+        nav { display: flex; gap: 6px; padding: 0 32px; background: var(--card); border-bottom: 1px solid var(--border); }
+        nav button {
+            border: none; background: none; padding: 14px 20px; cursor: pointer;
+            font-size: 15px; color: var(--muted); border-bottom: 2px solid transparent;
+            transition: all .15s;
+        }
+        nav button:hover { color: var(--text); }
+        nav button.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+        main { max-width: 1200px; margin: 24px auto; padding: 0 24px; }
+        section.panel { display: none; }
+        section.panel.active { display: block; }
+        .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+        .toolbar h2 { font-size: 17px; margin-right: auto; }
+        .btn {
+            border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;
+            font-size: 13px; background: var(--primary); color: #fff; transition: all .15s;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        .btn.ghost { background: #fff; color: var(--text); border: 1px solid var(--border); }
+        .btn.ghost:hover { border-color: var(--primary); color: var(--primary); }
+        .btn.sm { padding: 4px 10px; font-size: 12px; }
+        .btn.danger { background: var(--danger); }
+        .btn.success { background: var(--success); }
+        .btn.warning { background: var(--warning); }
+        .btn:disabled { opacity: .5; cursor: not-allowed; }
+        select, input, textarea {
+            padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
+            font-size: 13px; font-family: inherit; outline: none; background: #fff;
+        }
+        select:focus, input:focus, textarea:focus { border-color: var(--primary); }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background: #fafbfe; color: var(--muted); font-weight: 600; font-size: 12px; white-space: nowrap; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafbff; }
+        td .ops { display: flex; gap: 6px; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+        .badge.green { background: #e6f7ee; color: var(--success); }
+        .badge.red { background: #fdecec; color: var(--danger); }
+        .badge.yellow { background: #fdf3e0; color: var(--warning); }
+        .badge.blue { background: #e8f0fe; color: var(--primary); }
+        .badge.gray { background: #eef0f4; color: var(--muted); }
+        .empty { text-align: center; color: var(--muted); padding: 40px; }
+        /* modal */
+        .mask {
+            position: fixed; inset: 0; background: rgba(0,0,0,.4); display: none;
+            align-items: center; justify-content: center; z-index: 100;
+        }
+        .mask.show { display: flex; }
+        .modal {
+            background: #fff; border-radius: 12px; width: 480px; max-width: 92vw;
+            max-height: 90vh; overflow: auto; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,.2);
+        }
+        .modal h3 { margin-bottom: 18px; font-size: 16px; }
+        .form-row { margin-bottom: 14px; }
+        .form-row label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 12px; }
+        .form-row input, .form-row select, .form-row textarea { width: 100%; }
+        .form-row textarea { resize: vertical; min-height: 60px; }
+        .modal .footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .toast {
+            position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+            background: #333; color: #fff; padding: 10px 20px; border-radius: 8px;
+            font-size: 13px; z-index: 200; display: none; opacity: 0; transition: opacity .2s;
+        }
+        .toast.show { display: block; opacity: 1; }
+        .toast.error { background: var(--danger); }
+        .toast.success { background: var(--success); }
+    </style>
+</head>
+<body>
+<header>
+    <div>
+        <h1>🎮 游戏战队与赛事报名平台</h1>
+        <div class="sub">战队 · 队员 · 赛事 · 报名 一站式管理</div>
+    </div>
+</header>
+
+<nav>
+    <button data-tab="team" class="active">战队管理</button>
+    <button data-tab="member">队员管理</button>
+    <button data-tab="tournament">赛事管理</button>
+    <button data-tab="registration">报名管理</button>
+</nav>
+
+<main>
+    <!-- 战队 -->
+    <section class="panel active" id="tab-team">
+        <div class="toolbar">
+            <h2>战队列表</h2>
+            <button class="btn" onclick="openTeamModal()">＋ 新建战队</button>
+        </div>
+        <div class="card">
+            <table>
+                <thead><tr><th>ID</th><th>战队名称</th><th>标签</th><th>队长</th><th>联系方式</th><th>人数</th><th>操作</th></tr></thead>
+                <tbody id="team-tbody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 队员 -->
+    <section class="panel" id="tab-member">
+        <div class="toolbar">
+            <h2>队员列表</h2>
+            <select id="member-team-filter" onchange="loadMembers()">
+                <option value="">全部战队</option>
+            </select>
+            <button class="btn" onclick="openMemberModal()">＋ 新增队员</button>
+        </div>
+        <div class="card">
+            <table>
+                <thead><tr><th>ID</th><th>姓名</th><th>游戏昵称</th><th>所属战队</th><th>队内角色</th><th>联系方式</th><th>操作</th></tr></thead>
+                <tbody id="member-tbody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 赛事 -->
+    <section class="panel" id="tab-tournament">
+        <div class="toolbar">
+            <h2>赛事列表</h2>
+            <select id="tournament-status-filter" onchange="loadTournaments()">
+                <option value="">全部状态</option>
+                <option value="0">未开始</option>
+                <option value="1">报名中</option>
+                <option value="2">进行中</option>
+                <option value="3">已结束</option>
+            </select>
+            <button class="btn" onclick="openTournamentModal()">＋ 新建赛事</button>
+        </div>
+        <div class="card">
+            <table>
+                <thead><tr><th>ID</th><th>赛事名称</th><th>游戏项目</th><th>报名截止</th><th>人数/队</th><th>上限</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody id="tournament-tbody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 报名 -->
+    <section class="panel" id="tab-registration">
+        <div class="toolbar">
+            <h2>报名记录</h2>
+            <button class="btn" onclick="openRegisterModal()">＋ 战队报名</button>
+        </div>
+        <div class="card">
+            <table>
+                <thead><tr><th>ID</th><th>赛事</th><th>战队</th><th>游戏项目</th><th>报名时间</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody id="registration-tbody"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<!-- 通用弹窗 -->
+<div class="mask" id="mask">
+    <div class="modal" id="modal"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const BASE = 'http://localhost:8080';
+
+/* ---------------- 基础工具 ---------------- */
+function $(id) { return document.getElementById(id); }
+
+function showToast(msg, type = 'success') {
+    const t = $('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.className = 'toast ' + type, 2200);
+}
+
+async function api(path, options = {}) {
+    const config = { headers: {}, ...options };
+    if (config.body && typeof config.body === 'object') {
+        config.headers['Content-Type'] = 'application/json';
+        config.body = JSON.stringify(config.body);
+    }
+    const res = await fetch(BASE + path, config);
+    const data = await res.json();
+    if (data.code !== 200) throw new Error(data.message || '请求失败');
+    return data.data;
+}
+
+/* ---------------- 弹窗 ---------------- */
+function openModal(html) {
+    $('modal').innerHTML = html;
+    $('mask').classList.add('show');
+}
+function closeModal() { $('mask').classList.remove('show'); }
+$('mask').addEventListener('click', e => { if (e.target === $('mask')) closeModal(); });
+
+/* ---------------- 标签切换 ---------------- */
+document.querySelectorAll('nav button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('section.panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        $('tab-' + btn.dataset.tab).classList.add('active');
+    });
+});
+
+/* ---------------- 表格操作（事件委托，避免内联 onclick 注入） ---------------- */
+document.addEventListener('click', e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const id = Number(btn.dataset.id);
+    switch (btn.dataset.action) {
+        case 'edit-team': openTeamModal(teamsCache.find(t => t.id === id)); break;
+        case 'edit-member': openMemberModal(membersCache.find(m => m.id === id)); break;
+        case 'edit-tournament': openTournamentModal(tournamentsCache.find(t => t.id === id)); break;
+    }
+});
+
+/* ---------------- 时间格式 ---------------- */
+function toLocalInput(s) { return s ? s.slice(0, 16).replace(' ', 'T') : ''; }
+function toServerDate(v) { return v ? v.replace('T', ' ') + ':00' : null; }
+
+/* ---------------- 状态徽章 ---------------- */
+const TOURNAMENT_STATUS = { 0: ['未开始', 'gray'], 1: ['报名中', 'green'], 2: ['进行中', 'blue'], 3: ['已结束', 'red'] };
+const REG_STATUS = { 0: ['待审核', 'yellow'], 1: ['已通过', 'green'], 2: ['已拒绝', 'red'] };
+function badge(text, cls) { return `<span class="badge ${cls}">${text}</span>`; }
+
+/* ==================== 战队 ==================== */
+let teamsCache = [];
+let membersCache = [];
+let tournamentsCache = [];
+async function loadTeams() {
+    try {
+        const list = await api('/api/team/list');
+        teamsCache = list || [];
+        const tbody = $('team-tbody');
+        tbody.innerHTML = teamsCache.length ? teamsCache.map(t => `
+            <tr>
+                <td>${t.id}</td>
+                <td><strong>${esc(t.name)}</strong></td>
+                <td>${esc(t.tag || '-')}</td>
+                <td>${esc(t.captainName || '-')}</td>
+                <td>${esc(t.contactPhone || '-')}</td>
+                <td>${t.memberCount ?? 0} 人</td>
+                <td><div class="ops">
+                    <button class="btn sm" data-action="edit-team" data-id="${t.id}">编辑</button>
+                    <button class="btn sm danger" onclick="delTeam(${t.id})">删除</button>
+                </div></td>
+            </tr>`).join('') : '<tr><td colspan="7" class="empty">暂无战队</td></tr>';
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+function openTeamModal(team) {
+    const isEdit = !!team;
+    openModal(`
+        <h3>${isEdit ? '编辑战队' : '新建战队'}</h3>
+        <div class="form-row"><label>战队名称 *</label><input id="f-name" value="${isEdit ? esc(team.name) : ''}"></div>
+        <div class="form-row"><label>战队标签 / 口号</label><input id="f-tag" value="${isEdit ? esc(team.tag || '') : ''}"></div>
+        <div class="form-row"><label>队长姓名 *</label><input id="f-captain" value="${isEdit ? esc(team.captainName || '') : ''}"></div>
+        <div class="form-row"><label>联系方式</label><input id="f-phone" value="${isEdit ? esc(team.contactPhone || '') : ''}"></div>
+        <div class="form-row"><label>战队介绍</label><textarea id="f-desc">${isEdit ? esc(team.description || '') : ''}</textarea></div>
+        <div class="footer">
+            <button class="btn ghost" onclick="closeModal()">取消</button>
+            <button class="btn" onclick="saveTeam(${isEdit ? team.id : 'null'})">保存</button>
+        </div>
+    `);
+}
+
+async function saveTeam(id) {
+    const body = {
+        name: $('f-name').value.trim(),
+        tag: $('f-tag').value.trim(),
+        captainName: $('f-captain').value.trim(),
+        contactPhone: $('f-phone').value.trim(),
+        description: $('f-desc').value.trim(),
+    };
+    try {
+        if (id) { body.id = id; await api('/api/team', { method: 'PUT', body }); }
+        else await api('/api/team', { method: 'POST', body });
+        closeModal(); showToast('保存成功'); loadTeams(); loadTeamOptions();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function delTeam(id) {
+    if (!confirm('确定删除该战队？其队员与报名记录将一并删除。')) return;
+    try { await api('/api/team/' + id, { method: 'DELETE' }); showToast('删除成功'); loadTeams(); loadTeamOptions(); }
+    catch (e) { showToast(e.message, 'error'); }
+}
+
+/* ==================== 队员 ==================== */
+function loadTeamOptions() {
+    const sel = $('member-team-filter');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">全部战队</option>' + teamsCache.map(t =>
+        `<option value="${t.id}">${esc(t.name)}</option>`).join('');
+    sel.value = cur;
+}
+
+async function loadMembers() {
+    try {
+        const teamId = $('member-team-filter').value;
+        membersCache = await api('/api/member/list' + (teamId ? '?teamId=' + teamId : '')) || [];
+        const teamName = id => { const t = teamsCache.find(x => x.id === id); return t ? t.name : '-'; };
+        const tbody = $('member-tbody');
+        tbody.innerHTML = membersCache.length ? membersCache.map(m => `
+            <tr>
+                <td>${m.id}</td>
+                <td><strong>${esc(m.name)}</strong></td>
+                <td>${esc(m.gameId || '-')}</td>
+                <td>${esc(teamName(m.teamId))}</td>
+                <td>${badge(m.role === '队长' ? '队长' : m.role, m.role === '队长' ? 'blue' : 'gray')}</td>
+                <td>${esc(m.phone || '-')}</td>
+                <td><div class="ops">
+                    <button class="btn sm" data-action="edit-member" data-id="${m.id}">编辑</button>
+                    <button class="btn sm danger" onclick="delMember(${m.id})">删除</button>
+                </div></td>
+            </tr>`).join('') : '<tr><td colspan="7" class="empty">暂无队员</td></tr>';
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+function openMemberModal(member) {
+    const isEdit = !!member;
+    const teamOptions = teamsCache.map(t =>
+        `<option value="${t.id}" ${isEdit && member.teamId === t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('');
+    const roles = ['队长', '副队长', '队员'];
+    openModal(`
+        <h3>${isEdit ? '编辑队员' : '新增队员'}</h3>
+        <div class="form-row"><label>姓名 *</label><input id="f-name" value="${isEdit ? esc(member.name) : ''}"></div>
+        <div class="form-row"><label>游戏昵称 / ID</label><input id="f-gameId" value="${isEdit ? esc(member.gameId || '') : ''}"></div>
+        <div class="form-row"><label>所属战队 *</label><select id="f-teamId">${teamOptions}</select></div>
+        <div class="form-row"><label>队内角色</label><select id="f-role">${roles.map(r => `<option ${isEdit && member.role === r ? 'selected' : ''}>${r}</option>`).join('')}</select></div>
+        <div class="form-row"><label>联系方式</label><input id="f-phone" value="${isEdit ? esc(member.phone || '') : ''}"></div>
+        <div class="footer">
+            <button class="btn ghost" onclick="closeModal()">取消</button>
+            <button class="btn" onclick="saveMember(${isEdit ? member.id : 'null'})">保存</button>
+        </div>
+    `);
+}
+
+async function saveMember(id) {
+    const body = {
+        name: $('f-name').value.trim(),
+        gameId: $('f-gameId').value.trim(),
+        teamId: Number($('f-teamId').value),
+        role: $('f-role').value,
+        phone: $('f-phone').value.trim(),
+    };
+    try {
+        if (id) { body.id = id; await api('/api/member', { method: 'PUT', body }); }
+        else await api('/api/member', { method: 'POST', body });
+        closeModal(); showToast('保存成功'); loadMembers(); loadTeams();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function delMember(id) {
+    if (!confirm('确定删除该队员？')) return;
+    try { await api('/api/member/' + id, { method: 'DELETE' }); showToast('删除成功'); loadMembers(); loadTeams(); }
+    catch (e) { showToast(e.message, 'error'); }
+}
+
+/* ==================== 赛事 ==================== */
+async function loadTournaments() {
+    try {
+        const status = $('tournament-status-filter').value;
+        tournamentsCache = await api('/api/tournament/list' + (status ? '?status=' + status : '')) || [];
+        const tbody = $('tournament-tbody');
+        tbody.innerHTML = tournamentsCache.length ? tournamentsCache.map(t => {
+            const [label, cls] = TOURNAMENT_STATUS[t.status] || ['未知', 'gray'];
+            return `
+            <tr>
+                <td>${t.id}</td>
+                <td><strong>${esc(t.name)}</strong></td>
+                <td>${esc(t.gameName)}</td>
+                <td>${esc(fmt(t.registrationDeadline))}</td>
+                <td>${t.teamSize} 人/队</td>
+                <td>${t.maxTeams} 队</td>
+                <td>${badge(label, cls)}</td>
+                <td><div class="ops">
+                    <button class="btn sm" data-action="edit-tournament" data-id="${t.id}">编辑</button>
+                    <button class="btn sm danger" onclick="delTournament(${t.id})">删除</button>
+                </div></td>
+            </tr>`;
+        }).join('') : '<tr><td colspan="8" class="empty">暂无赛事</td></tr>';
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+function openTournamentModal(t) {
+    const isEdit = !!t;
+    const statuses = [[0, '未开始'], [1, '报名中'], [2, '进行中'], [3, '已结束']];
+    openModal(`
+        <h3>${isEdit ? '编辑赛事' : '新建赛事'}</h3>
+        <div class="form-row"><label>赛事名称 *</label><input id="f-name" value="${isEdit ? esc(t.name) : ''}"></div>
+        <div class="form-row"><label>游戏项目 *</label><input id="f-game" value="${isEdit ? esc(t.gameName) : ''}"></div>
+        <div class="form-row"><label>比赛开始时间</label><input type="datetime-local" id="f-start" value="${toLocalInput(t && t.startTime)}"></div>
+        <div class="form-row"><label>比赛结束时间</label><input type="datetime-local" id="f-end" value="${toLocalInput(t && t.endTime)}"></div>
+        <div class="form-row"><label>报名截止时间</label><input type="datetime-local" id="f-deadline" value="${toLocalInput(t && t.registrationDeadline)}"></div>
+        <div class="form-row"><label>每队人数要求 *</label><input type="number" id="f-size" value="${isEdit ? t.teamSize : 5}"></div>
+        <div class="form-row"><label>报名战队上限 *</label><input type="number" id="f-max" value="${isEdit ? t.maxTeams : 16}"></div>
+        <div class="form-row"><label>状态</label><select id="f-status">${statuses.map(s => `<option value="${s[0]}" ${isEdit && t.status === s[0] ? 'selected' : ''}>${s[1]}</option>`).join('')}</select></div>
+        <div class="form-row"><label>赛事描述</label><textarea id="f-desc">${isEdit ? esc(t.description || '') : ''}</textarea></div>
+        <div class="footer">
+            <button class="btn ghost" onclick="closeModal()">取消</button>
+            <button class="btn" onclick="saveTournament(${isEdit ? t.id : 'null'})">保存</button>
+        </div>
+    `);
+}
+
+async function saveTournament(id) {
+    const body = {
+        name: $('f-name').value.trim(),
+        gameName: $('f-game').value.trim(),
+        startTime: toServerDate($('f-start').value),
+        endTime: toServerDate($('f-end').value),
+        registrationDeadline: toServerDate($('f-deadline').value),
+        teamSize: Number($('f-size').value),
+        maxTeams: Number($('f-max').value),
+        status: Number($('f-status').value),
+        description: $('f-desc').value.trim(),
+    };
+    try {
+        if (id) { body.id = id; await api('/api/tournament', { method: 'PUT', body }); }
+        else await api('/api/tournament', { method: 'POST', body });
+        closeModal(); showToast('保存成功'); loadTournaments();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function delTournament(id) {
+    if (!confirm('确定删除该赛事？其报名记录将一并删除。')) return;
+    try { await api('/api/tournament/' + id, { method: 'DELETE' }); showToast('删除成功'); loadTournaments(); }
+    catch (e) { showToast(e.message, 'error'); }
+}
+
+/* ==================== 报名 ==================== */
+async function loadRegistrations() {
+    try {
+        const list = await api('/api/registration/list');
+        const tbody = $('registration-tbody');
+        tbody.innerHTML = list.length ? list.map(r => {
+            const [label, cls] = REG_STATUS[r.status] || ['未知', 'gray'];
+            const ops = r.status === 0
+                ? `<button class="btn sm success" onclick="review(${r.id},1)">通过</button>
+                   <button class="btn sm danger" onclick="review(${r.id},2)">拒绝</button>`
+                : `<button class="btn sm ghost" onclick="delReg(${r.id})">删除</button>`;
+            return `
+            <tr>
+                <td>${r.id}</td>
+                <td><strong>${esc(r.tournamentName || '-')}</strong></td>
+                <td>${esc(r.teamName || '-')}</td>
+                <td>${esc(r.gameName || '-')}</td>
+                <td>${esc(fmt(r.registerTime))}</td>
+                <td>${badge(label, cls)}</td>
+                <td><div class="ops">${ops}</div></td>
+            </tr>`;
+        }).join('') : '<tr><td colspan="7" class="empty">暂无报名记录</td></tr>';
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function openRegisterModal() {
+    try {
+        const tournaments = await api('/api/tournament/list?status=1');
+        if (!tournaments.length) { showToast('当前没有「报名中」的赛事', 'error'); return; }
+        const tOptions = tournaments.map(t => `<option value="${t.id}">${esc(t.name)}（需 ${t.teamSize} 人/队）</option>`).join('');
+        const teamOptions = teamsCache.map(t => `<option value="${t.id}">${esc(t.name)}（${t.memberCount ?? 0} 人）</option>`).join('');
+        openModal(`
+            <h3>战队报名</h3>
+            <div class="form-row"><label>选择赛事 *</label><select id="f-tournament">${tOptions}</select></div>
+            <div class="form-row"><label>选择战队 *</label><select id="f-team">${teamOptions}</select></div>
+            <div class="footer">
+                <button class="btn ghost" onclick="closeModal()">取消</button>
+                <button class="btn" onclick="submitRegister()">提交报名</button>
+            </div>
+        `);
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function submitRegister() {
+    const tournamentId = $('f-tournament').value;
+    const teamId = $('f-team').value;
+    try {
+        await api(`/api/registration/register?tournamentId=${tournamentId}&teamId=${teamId}`, { method: 'POST' });
+        closeModal(); showToast('报名成功'); loadRegistrations();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function review(id, status) {
+    try {
+        await api(`/api/registration/review/${id}?status=${status}`, { method: 'PUT' });
+        showToast(status === 1 ? '已通过' : '已拒绝'); loadRegistrations();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function delReg(id) {
+    if (!confirm('确定删除该报名记录？')) return;
+    try { await api('/api/registration/' + id, { method: 'DELETE' }); showToast('删除成功'); loadRegistrations(); }
+    catch (e) { showToast(e.message, 'error'); }
+}
+
+/* ---------------- 通用 ---------------- */
+function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function fmt(s) { return s ? String(s).replace('T', ' ').slice(0, 16) : '-'; }
+
+/* ---------------- 初始化 ---------------- */
+async function init() {
+    await loadTeams();
+    loadTeamOptions();
+    await Promise.all([loadMembers(), loadTournaments(), loadRegistrations()]);
+}
+init();
+</script>
+</body>
+</html>
